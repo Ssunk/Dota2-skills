@@ -51,9 +51,13 @@
 
 ```
 dota2-stats/
-├── SKILL.md          # Claude Code 技能描述
-├── dota2_query.py    # Python 查询脚本（全部功能）
-└── README.md         # 本文件
+├── SKILL.md                  # Claude Code 技能描述
+├── README.md                 # 本文件
+├── scripts/
+│   └── dota2_query.py        # Python 查询脚本（全部功能）
+└── data/
+    ├── translations.json     # 中英双语翻译字典
+    └── hero_zh_names.json    # 英雄中文名映射 (127 个)
 ```
 
 ## 🚀 使用
@@ -71,23 +75,23 @@ dota2-stats/
 ### 命令行独立使用
 
 ```bash
-python dota2_query.py search Miracle
-python dota2_query.py player 105248644
-python dota2_query.py recent 105248644
-python dota2_query.py hero_matchups 11          # 影魔对抗数据
-python dota2_query.py hero_rankings 74          # 祈求者 Top 玩家
-python dota2_query.py pro_matches --limit 10
-python dota2_query.py live
-python dota2_query.py team 8291895              # 查战队
-python dota2_query.py constants items           # 物品数据
+python scripts/dota2_query.py search Miracle
+python scripts/dota2_query.py player 105248644
+python scripts/dota2_query.py recent 105248644
+python scripts/dota2_query.py hero_matchups 11          # 影魔对抗数据
+python scripts/dota2_query.py hero_rankings 74          # 祈求者 Top 玩家
+python scripts/dota2_query.py pro_matches --limit 10
+python scripts/dota2_query.py live
+python scripts/dota2_query.py team 8291895              # 查战队
+python scripts/dota2_query.py constants items           # 物品数据
 ```
 
 ### 筛选参数
 
 ```bash
-python dota2_query.py wl 105248644 --days 30 --lobby_type 7    # 近30天排位
-python dota2_query.py matches 105248644 --hero_id 11 --limit 5 # 影魔最近5场
-python dota2_query.py --lang en player 105248644                # English output
+python scripts/dota2_query.py wl 105248644 --days 30 --lobby_type 7    # 近30天排位
+python scripts/dota2_query.py matches 105248644 --hero_id 11 --limit 5 # 影魔最近5场
+python scripts/dota2_query.py --lang en player 105248644                # English output
 ```
 
 ## 🔧 技术

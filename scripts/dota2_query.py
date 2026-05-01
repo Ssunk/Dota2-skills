@@ -3,39 +3,39 @@
 Dota 2 Stats Query Tool - Based on OpenDota API (Full Coverage)
 
 Player Commands:
-    python dota2_query.py search <player_name>           Search players by name
-    python dota2_query.py player <account_id>            Player profile & win rate
-    python dota2_query.py wl <account_id> [filters]      Win/Loss stats
-    python dota2_query.py recent <account_id>            Recent ~20 matches
-    python dota2_query.py matches <account_id> [filters] Full match history
-    python dota2_query.py heroes <account_id> [--limit]  Hero usage stats
-    python dota2_query.py peers <account_id> [--limit]   Frequent teammates
-    python dota2_query.py totals <account_id> [filters]  Lifetime totals (kills, assists, etc.)
-    python dota2_query.py counts <account_id>            Counts by category
-    python dota2_query.py rankings <account_id>          Player hero rankings
-    python dota2_query.py ratings <account_id>           Rank tier history
-    python dota2_query.py refresh <account_id>           Refresh player data
+    python scripts/dota2_query.py search <player_name>           Search players by name
+    python scripts/dota2_query.py player <account_id>            Player profile & win rate
+    python scripts/dota2_query.py wl <account_id> [filters]      Win/Loss stats
+    python scripts/dota2_query.py recent <account_id>            Recent ~20 matches
+    python scripts/dota2_query.py matches <account_id> [filters] Full match history
+    python scripts/dota2_query.py heroes <account_id> [--limit]  Hero usage stats
+    python scripts/dota2_query.py peers <account_id> [--limit]   Frequent teammates
+    python scripts/dota2_query.py totals <account_id> [filters]  Lifetime totals (kills, assists, etc.)
+    python scripts/dota2_query.py counts <account_id>            Counts by category
+    python scripts/dota2_query.py rankings <account_id>          Player hero rankings
+    python scripts/dota2_query.py ratings <account_id>           Rank tier history
+    python scripts/dota2_query.py refresh <account_id>           Refresh player data
 
 Match Commands:
-    python dota2_query.py match <match_id>               Single match detail
+    python scripts/dota2_query.py match <match_id>               Single match detail
 
 Hero Commands:
-    python dota2_query.py hero_list                      All heroes
-    python dota2_query.py hero_stats                     Global hero statistics
-    python dota2_query.py hero_matchups <hero_id>        Hero matchup win rates
-    python dota2_query.py hero_rankings <hero_id>        Top players for a hero
-    python dota2_query.py benchmarks <hero_id>           Hero benchmarks
+    python scripts/dota2_query.py hero_list                      All heroes
+    python scripts/dota2_query.py hero_stats                     Global hero statistics
+    python scripts/dota2_query.py hero_matchups <hero_id>        Hero matchup win rates
+    python scripts/dota2_query.py hero_rankings <hero_id>        Top players for a hero
+    python scripts/dota2_query.py benchmarks <hero_id>           Hero benchmarks
 
 Global Commands:
-    python dota2_query.py pro_players                    Pro player list
-    python dota2_query.py pro_matches [--limit N]        Recent pro matches
-    python dota2_query.py public_matches [--min_rank N]  Recent public matches
-    python dota2_query.py live                           Live games
-    python dota2_query.py teams [--limit N]              Team list
-    python dota2_query.py team <team_id>                 Team detail & matches
-    python dota2_query.py leagues                        League list
-    python dota2_query.py constants <resource>           Game constants (heroes, items, etc.)
-    python dota2_query.py find_matches [--teamA ids] [--teamB ids]  Find by hero combo
+    python scripts/dota2_query.py pro_players                    Pro player list
+    python scripts/dota2_query.py pro_matches [--limit N]        Recent pro matches
+    python scripts/dota2_query.py public_matches [--min_rank N]  Recent public matches
+    python scripts/dota2_query.py live                           Live games
+    python scripts/dota2_query.py teams [--limit N]              Team list
+    python scripts/dota2_query.py team <team_id>                 Team detail & matches
+    python scripts/dota2_query.py leagues                        League list
+    python scripts/dota2_query.py constants <resource>           Game constants (heroes, items, etc.)
+    python scripts/dota2_query.py find_matches [--teamA ids] [--teamB ids]  Find by hero combo
 
 Filters (for wl/matches/totals/counts):
     --days N          Last N days
@@ -50,6 +50,7 @@ Global:
 
 import sys
 import json
+import os
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -62,520 +63,23 @@ BASE_URL = "https://api.opendota.com/api"
 REQUEST_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "Accept": "application/json, text/plain, */*",
-    "Content type": "application/json; charset=utf-8"
+    "Content-Type": "application/json; charset=utf-8"
 }
 
 # ──────────────────────────────────────────────
-#  Translations (zh / en)
+#  Load translation and hero data from JSON files
 # ──────────────────────────────────────────────
-T = {
-    "zh": {
-        # Error messages
-        "api_fail": "API 请求失败: HTTP",
-        "not_found": "玩家未找到或数据不可用",
-        "rate_limit": "请求频率过高，请稍后再试",
-        "network_error": "网络错误:",
-        "timeout_error": "请求超时，服务器 15 秒内未响应",
-        "json_error": "服务器返回了无效数据",
-        "no_recent": "未找到最近比赛记录",
-        "no_matches": "未找到比赛记录",
-        "no_heroes": "未找到英雄使用记录",
-        "no_peers": "未找到一起玩的玩家记录",
-        "unknown_cmd": "未知命令:",
-        "available_cmds": "可用命令:",
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_DIR = os.path.join(BASE_DIR, "data")
 
-        # Search
-        "search_no_result": "未找到匹配「{query}」的玩家",
-        "search_header": "搜索「{query}」的结果（共 {count} 个）:",
-        "search_col_id": "Account ID",
-        "search_col_name": "玩家名",
-        "search_col_last": "最后比赛时间",
-        "search_col_sim": "相似度",
 
-        # Player
-        "player_header": "玩家资料",
-        "player_name": "名称:",
-        "player_account_id": "Account ID:",
-        "player_steam_id": "Steam ID:",
-        "player_rank": "段位:",
-        "player_leaderboard": "天梯排名:",
-        "player_mmr": "预估 MMR:",
-        "player_games": "总场次:",
-        "player_wl": "胜/负:",
-        "player_winrate": "总胜率:",
-        "player_steam_url": "Steam:",
+def _load_json(filename):
+    with open(os.path.join(DATA_DIR, filename), "r", encoding="utf-8") as f:
+        return json.load(f)
 
-        # WL
-        "wl_header": "胜负统计",
-        "wl_wins": "胜场:",
-        "wl_losses": "负场:",
-        "wl_total": "总场:",
-        "wl_winrate": "胜率:",
-        "wl_filter_days": "最近{days}天",
-        "wl_filter_hero": "英雄:{hero}",
-        "wl_filter_lobby": "大厅:{lobby}",
 
-        # Recent
-        "recent_header": "最近 {count} 场比赛:",
-        "recent_col_hero": "英雄",
-        "recent_col_result": "结果",
-        "recent_col_gpm": "GPM",
-        "recent_col_xpm": "XPM",
-        "recent_col_duration": "时长",
-        "recent_col_date": "日期",
-        "recent_summary": "最近{total}场: {wins}胜 {losses}负 (胜率 {wr:.1f}%)",
-
-        # Matches
-        "matches_header": "比赛历史（共 {count} 场）:",
-        "matches_col_id": "比赛ID",
-        "matches_summary": "共{total}场: {wins}胜 {losses}负 (胜率 {wr:.1f}%)",
-
-        # Heroes
-        "heroes_header": "英雄使用统计（Top {limit}）:",
-        "heroes_col_hero": "英雄",
-        "heroes_col_games": "场数",
-        "heroes_col_wins": "胜场",
-        "heroes_col_winrate": "胜率",
-        "heroes_col_last": "最后使用",
-
-        # Match detail
-        "match_header": "比赛详情 - Match ID:",
-        "match_mode": "模式",
-        "match_duration": "时长",
-        "match_date": "日期",
-        "match_score": "比分",
-        "match_result_radiant": "天辉胜利",
-        "match_result_dire": "夜魇胜利",
-        "match_team_radiant": "天辉",
-        "match_team_dire": "夜魇",
-        "match_col_player": "玩家",
-        "match_col_damage": "伤害",
-        "match_col_lh": "补刀",
-        "match_col_level": "等级",
-        "match_anonymous": "匿名",
-
-        # Peers
-        "peers_header": "一起玩的玩家（Top {limit}）:",
-        "peers_col_name": "玩家名",
-        "peers_col_games": "同队场次",
-        "peers_col_wins": "同队胜场",
-        "peers_col_winrate": "同队胜率",
-        "peers_col_last": "最后同场",
-
-        # Hero list
-        "herolist_header": "Dota 2 英雄列表（共 {count} 个）:",
-        "herolist_col_id": "ID",
-        "herolist_col_name": "英雄名",
-        "herolist_col_attr": "主属性",
-        "herolist_col_atk": "攻击类型",
-        "herolist_col_roles": "定位",
-
-        # Hero stats
-        "herostats_header": "英雄统计数据:",
-        "herostats_col_id": "ID",
-        "herostats_col_hero": "英雄",
-        "herostats_col_turbo_picks": "加速场",
-        "herostats_col_turbo_wins": "加速胜",
-        "herostats_col_turbo_wr": "加速胜率",
-
-        # Refresh
-        "refresh_ok": "已提交刷新请求 (account_id: {aid})",
-        "refresh_resp": "响应:",
-
-        # Usage
-        "usage_search": "用法: python dota2_query.py search <玩家名>",
-        "usage_player": "用法: python dota2_query.py player <account_id>",
-        "usage_wl": "用法: python dota2_query.py wl <account_id> [--days N] [--hero_id N] [--lobby_type N]",
-        "usage_recent": "用法: python dota2_query.py recent <account_id>",
-        "usage_matches": "用法: python dota2_query.py matches <account_id> [--limit N] [--hero_id N] [--days N]",
-        "usage_heroes": "用法: python dota2_query.py heroes <account_id> [--limit N]",
-        "usage_match": "用法: python dota2_query.py match <match_id>",
-        "usage_peers": "用法: python dota2_query.py peers <account_id> [--limit N]",
-
-        # Common labels
-        "win": "胜",
-        "lose": "负",
-        "unknown": "未知",
-        "uncalibrated": "未校准",
-        "n_a": "N/A",
-
-        # Time ago
-        "minutes_ago": "{n}分钟前",
-        "hours_ago": "{n}小时前",
-        "days_ago": "{n}天前",
-        "months_ago": "{n}个月前",
-        "years_ago": "{n}年前",
-
-        # Rank tiers
-        "rank_1": "先锋",
-        "rank_2": "卫士",
-        "rank_3": "中军",
-        "rank_4": "执政官",
-        "rank_5": "传奇",
-        "rank_6": "远古",
-        "rank_7": "神圣",
-        "rank_8": "冠绝一世",
-        "rank_unknown": "未知({tier})",
-
-        # Game modes
-        "mode_0": "Unknown",
-        "mode_1": "全英雄选择",
-        "mode_2": "队长模式",
-        "mode_3": "随机征召",
-        "mode_4": "单征召",
-        "mode_5": "全阵营随机",
-        "mode_12": "最少出场",
-        "mode_15": "自定义",
-        "mode_16": "队长征召",
-        "mode_18": "技能征召",
-        "mode_22": "排位全选",
-        "mode_23": "加速模式",
-
-        # Lobby types
-        "lobby_0": "普通",
-        "lobby_1": "练习",
-        "lobby_2": "锦标赛",
-        "lobby_4": "合作对抗电脑",
-        "lobby_5": "排位单排/双排",
-        "lobby_6": "排位组排",
-        "lobby_7": "排位",
-        "lobby_8": "1v1中路单挑",
-        "lobby_9": "对战电脑",
-
-        # Attributes
-        "attr_agi": "敏捷",
-        "attr_str": "力量",
-        "attr_int": "智力",
-        "attr_all": "全能",
-
-        # Attack type
-        "atk_melee": "近战",
-        "atk_ranged": "远程",
-
-        # Result symbols
-        "result_win": "✅ 胜",
-        "result_lose": "❌ 负",
-    },
-
-    "en": {
-        # Error messages
-        "api_fail": "API request failed: HTTP",
-        "not_found": "Player not found or data unavailable",
-        "rate_limit": "Rate limit exceeded, please try again later",
-        "network_error": "Network error:",
-        "timeout_error": "Request timed out, server did not respond within 15 seconds",
-        "json_error": "Server returned invalid data",
-        "no_recent": "No recent matches found",
-        "no_matches": "No matches found",
-        "no_heroes": "No hero stats found",
-        "no_peers": "No peer records found",
-        "unknown_cmd": "Unknown command:",
-        "available_cmds": "Available commands:",
-
-        # Search
-        "search_no_result": "No players found matching \"{query}\"",
-        "search_header": "Search results for \"{query}\" ({count} found):",
-        "search_col_id": "Account ID",
-        "search_col_name": "Player Name",
-        "search_col_last": "Last Match",
-        "search_col_sim": "Similarity",
-
-        # Player
-        "player_header": "Player Profile",
-        "player_name": "Name:",
-        "player_account_id": "Account ID:",
-        "player_steam_id": "Steam ID:",
-        "player_rank": "Rank:",
-        "player_leaderboard": "Leaderboard:",
-        "player_mmr": "Est. MMR:",
-        "player_games": "Total Games:",
-        "player_wl": "W/L:",
-        "player_winrate": "Win Rate:",
-        "player_steam_url": "Steam:",
-
-        # WL
-        "wl_header": "Win/Loss Stats",
-        "wl_wins": "Wins:",
-        "wl_losses": "Losses:",
-        "wl_total": "Total:",
-        "wl_winrate": "Win Rate:",
-        "wl_filter_days": "last {days} days",
-        "wl_filter_hero": "hero:{hero}",
-        "wl_filter_lobby": "lobby:{lobby}",
-
-        # Recent
-        "recent_header": "Recent {count} Matches:",
-        "recent_col_hero": "Hero",
-        "recent_col_result": "Result",
-        "recent_col_gpm": "GPM",
-        "recent_col_xpm": "XPM",
-        "recent_col_duration": "Duration",
-        "recent_col_date": "Date",
-        "recent_summary": "Last {total}: {wins}W {losses}L (Win Rate {wr:.1f}%)",
-
-        # Matches
-        "matches_header": "Match History ({count} matches):",
-        "matches_col_id": "Match ID",
-        "matches_summary": "Total {total}: {wins}W {losses}L (Win Rate {wr:.1f}%)",
-
-        # Heroes
-        "heroes_header": "Hero Stats (Top {limit}):",
-        "heroes_col_hero": "Hero",
-        "heroes_col_games": "Games",
-        "heroes_col_wins": "Wins",
-        "heroes_col_winrate": "Win Rate",
-        "heroes_col_last": "Last Played",
-
-        # Match detail
-        "match_header": "Match Detail - Match ID:",
-        "match_mode": "Mode",
-        "match_duration": "Duration",
-        "match_date": "Date",
-        "match_score": "Score",
-        "match_result_radiant": "Radiant Victory",
-        "match_result_dire": "Dire Victory",
-        "match_team_radiant": "Radiant",
-        "match_team_dire": "Dire",
-        "match_col_player": "Player",
-        "match_col_damage": "Damage",
-        "match_col_lh": "LH",
-        "match_col_level": "Lvl",
-        "match_anonymous": "Anonymous",
-
-        # Peers
-        "peers_header": "Frequent Teammates (Top {limit}):",
-        "peers_col_name": "Player",
-        "peers_col_games": "Together",
-        "peers_col_wins": "Wins",
-        "peers_col_winrate": "Win Rate",
-        "peers_col_last": "Last Played",
-
-        # Hero list
-        "herolist_header": "Dota 2 Hero List ({count} heroes):",
-        "herolist_col_id": "ID",
-        "herolist_col_name": "Name",
-        "herolist_col_attr": "Attribute",
-        "herolist_col_atk": "Attack",
-        "herolist_col_roles": "Roles",
-
-        # Hero stats
-        "herostats_header": "Hero Statistics:",
-        "herostats_col_id": "ID",
-        "herostats_col_hero": "Hero",
-        "herostats_col_turbo_picks": "Turbo Picks",
-        "herostats_col_turbo_wins": "Turbo Wins",
-        "herostats_col_turbo_wr": "Turbo WR",
-
-        # Refresh
-        "refresh_ok": "Refresh request submitted (account_id: {aid})",
-        "refresh_resp": "Response:",
-
-        # Usage
-        "usage_search": "Usage: python dota2_query.py search <player_name>",
-        "usage_player": "Usage: python dota2_query.py player <account_id>",
-        "usage_wl": "Usage: python dota2_query.py wl <account_id> [--days N] [--hero_id N] [--lobby_type N]",
-        "usage_recent": "Usage: python dota2_query.py recent <account_id>",
-        "usage_matches": "Usage: python dota2_query.py matches <account_id> [--limit N] [--hero_id N] [--days N]",
-        "usage_heroes": "Usage: python dota2_query.py heroes <account_id> [--limit N]",
-        "usage_match": "Usage: python dota2_query.py match <match_id>",
-        "usage_peers": "Usage: python dota2_query.py peers <account_id> [--limit N]",
-
-        # Common labels
-        "win": "W",
-        "lose": "L",
-        "unknown": "Unknown",
-        "uncalibrated": "Uncalibrated",
-        "n_a": "N/A",
-
-        # Time ago
-        "minutes_ago": "{n} minutes ago",
-        "hours_ago": "{n} hours ago",
-        "days_ago": "{n} days ago",
-        "months_ago": "{n} months ago",
-        "years_ago": "{n} years ago",
-
-        # Rank tiers
-        "rank_1": "Herald",
-        "rank_2": "Guardian",
-        "rank_3": "Crusader",
-        "rank_4": "Archon",
-        "rank_5": "Legend",
-        "rank_6": "Ancient",
-        "rank_7": "Divine",
-        "rank_8": "Immortal",
-        "rank_unknown": "Unknown({tier})",
-
-        # Game modes
-        "mode_0": "Unknown",
-        "mode_1": "All Pick",
-        "mode_2": "Captain's Mode",
-        "mode_3": "Random Draft",
-        "mode_4": "Single Draft",
-        "mode_5": "All Random",
-        "mode_12": "Least Played",
-        "mode_15": "Custom Game",
-        "mode_16": "Captain's Draft",
-        "mode_18": "Ability Draft",
-        "mode_22": "All Pick Ranked",
-        "mode_23": "Turbo",
-
-        # Lobby types
-        "lobby_0": "Normal",
-        "lobby_1": "Practice",
-        "lobby_2": "Tournament",
-        "lobby_4": "Co-op vs Bots",
-        "lobby_5": "Ranked Solo/Duo",
-        "lobby_6": "Ranked Party",
-        "lobby_7": "Ranked",
-        "lobby_8": "1v1 Mid",
-        "lobby_9": "Bot Match",
-
-        # Attributes
-        "attr_agi": "Agility",
-        "attr_str": "Strength",
-        "attr_int": "Intelligence",
-        "attr_all": "Universal",
-
-        # Attack type
-        "atk_melee": "Melee",
-        "atk_ranged": "Ranged",
-
-        # Result symbols
-        "result_win": "W",
-        "result_lose": "L",
-    }
-}
-
-# Hero ID → Chinese name mapping
-HERO_ZH_NAMES = {
-    1: "敌法师",
-    2: "斧王",
-    3: "祸乱之源",
-    4: "血魔",
-    5: "水晶室女",
-    6: "卓尔游侠",
-    7: "撼地者",
-    8: "主宰",
-    9: "米拉娜",
-    10: "变体精灵",
-    11: "影魔",
-    12: "幻影长矛手",
-    13: "帕克",
-    14: "屠夫",
-    15: "剃刀",
-    16: "沙王",
-    17: "风暴之灵",
-    18: "斯温",
-    19: "小小",
-    20: "复仇之魂",
-    21: "风行者",
-    22: "宙斯",
-    23: "昆卡",
-    25: "莉娜",
-    26: "莱恩",
-    27: "暗影萨满",
-    28: "斯拉达",
-    29: "潮汐猎人",
-    30: "巫医",
-    31: "巫妖",
-    32: "力丸",
-    33: "谜团",
-    34: "修补匠",
-    35: "狙击手",
-    36: "瘟疫法师",
-    37: "术士",
-    38: "兽王",
-    39: "痛苦女王",
-    40: "剧毒术士",
-    41: "虚空假面",
-    42: "冥魂大帝",
-    43: "死亡先知",
-    44: "幻影刺客",
-    45: "帕格纳",
-    46: "圣堂刺客",
-    47: "冥界亚龙",
-    48: "露娜",
-    49: "龙骑士",
-    50: "戴泽",
-    51: "发条技师",
-    52: "拉席克",
-    53: "先知",
-    54: "噬魂鬼",
-    55: "黑暗贤者",
-    56: "克林克兹",
-    57: "全能骑士",
-    58: "魅惑魔女",
-    59: "哈斯卡",
-    60: "暗夜魔王",
-    61: "育母蜘蛛",
-    62: "赏金猎人",
-    63: "编织者",
-    64: "杰奇洛",
-    65: "蝙蝠骑士",
-    66: "陈",
-    67: "幽鬼",
-    68: "远古冰魄",
-    69: "末日使者",
-    70: "熊战士",
-    71: "裂魂人",
-    72: "矮人直升机",
-    73: "炼金术士",
-    74: "祈求者",
-    75: "沉默术士",
-    76: "殁境毁灭者",
-    77: "狼人",
-    78: "酒仙",
-    79: "暗影恶魔",
-    80: "德鲁伊",
-    81: "混沌骑士",
-    82: "米波",
-    83: "树精卫士",
-    84: "食人魔魔法师",
-    85: "不朽尸王",
-    86: "拉比克",
-    87: "干扰者",
-    88: "司夜刺客",
-    89: "娜迦海妖",
-    90: "光之守卫",
-    91: "艾欧",
-    92: "维萨吉",
-    93: "斯拉克",
-    94: "美杜莎",
-    95: "巨魔战将",
-    96: "半人马战行者",
-    97: "马格纳斯",
-    98: "伐木机",
-    99: "钢背兽",
-    100: "巨牙海民",
-    101: "天怒法师",
-    102: "亚巴顿",
-    103: "上古巨神",
-    104: "军团指挥官",
-    105: "工程师",
-    106: "灰烬之灵",
-    107: "大地之灵",
-    108: "孽主",
-    109: "恐怖利刃",
-    110: "凤凰",
-    111: "神谕者",
-    112: "寒冬飞龙",
-    113: "天穹守望者",
-    114: "齐天大圣",
-    119: "邪影芳灵",
-    120: "石鳞剑士",
-    121: "天涯墨客",
-    123: "森海飞侠",
-    126: "虚无之灵",
-    128: "电炎绝手",
-    129: "玛尔斯",
-    131: "百戏大王",
-    135: "破晓辰星",
-    136: "玛西",
-    137: "原始兽",
-    138: "琼英碧灵",
-    145: "凯",
-    155: "拉尔戈",
-}
+T = _load_json("translations.json")
+HERO_ZH_NAMES = {int(k): v for k, v in _load_json("hero_zh_names.json").items()}
 
 # Global language, set during startup
 LANG = "zh"
@@ -598,21 +102,24 @@ def get_rank_name(tier):
 
 
 def get_mode_name(mode_id):
-    """Get localized game mode name."""
+    """Get localized game mode name. Falls back to zh if not found in current lang."""
     key = f"mode_{mode_id}"
-    return t(key) if key in T[LANG] else str(mode_id)
+    translated = t(key)
+    return translated if translated != key else str(mode_id)
 
 
 def get_lobby_name(lobby_id):
-    """Get localized lobby type name."""
+    """Get localized lobby type name. Falls back to zh if not found in current lang."""
     key = f"lobby_{lobby_id}"
-    return t(key) if key in T[LANG] else str(lobby_id)
+    translated = t(key)
+    return translated if translated != key else str(lobby_id)
 
 
 def get_attr_name(attr):
-    """Get localized attribute name."""
+    """Get localized attribute name. Falls back to zh if not found in current lang."""
     key = f"attr_{attr}"
-    return t(key) if key in T[LANG] else attr
+    translated = t(key)
+    return translated if translated != key else attr
 
 
 def get_atk_name(atk_type):
@@ -1132,7 +639,7 @@ def cmd_hero_stats(args):
 def cmd_refresh(args):
     """Refresh player match data."""
     if not args:
-        print("用法: python dota2_query.py refresh <account_id>")
+        print(t("usage_refresh"))
         sys.exit(1)
 
     account_id = args[0]
@@ -1178,33 +685,33 @@ def parse_filters(args):
 def cmd_totals(args):
     """GET /players/{account_id}/totals - Lifetime totals."""
     if not args:
-        print("Usage: python dota2_query.py totals <account_id> [--days N] [--hero_id N]"); sys.exit(1)
+        print(t("usage_totals")); sys.exit(1)
     account_id = args[0]
     params = parse_filters(args[1:])
     data = api_get(f"/players/{account_id}/totals", params)
     if not data:
-        print("No totals data found"); return
-    print(f"\n  Lifetime Totals (account: {account_id}):\n")
-    print(f"  {'Field':<20} {'Total':<15} {'Games':<10} {'Average'}")
+        print(t("no_totals")); return
+    print(f"\n  {t('totals_header', aid=account_id)}\n")
+    print(f"  {t('col_field'):<20} {t('col_total'):<15} {t('col_games'):<10} {t('col_average')}")
     print("  " + "-" * 60)
     for item in data:
         field = item.get("field", "?")
         n = item.get("n", 0)
         s = item.get("sum", 0)
-        avg = f"{s/n:.1f}" if n > 0 else "N/A"
+        avg = f"{s/n:.1f}" if n > 0 else t("n_a")
         print(f"  {field:<20} {s:<15.0f} {n:<10} {avg}")
 
 
 def cmd_counts(args):
     """GET /players/{account_id}/counts - Counts by category."""
     if not args:
-        print("Usage: python dota2_query.py counts <account_id>"); sys.exit(1)
+        print(t("usage_counts")); sys.exit(1)
     account_id = args[0]
     params = parse_filters(args[1:])
     data = api_get(f"/players/{account_id}/counts", params)
     if not data:
-        print("No counts data found"); return
-    print(f"\n  Counts by Category (account: {account_id}):\n")
+        print(t("no_counts")); return
+    print(f"\n  {t('counts_header', aid=account_id)}\n")
     for category, values in data.items():
         print(f"  [{category}]")
         if isinstance(values, dict):
@@ -1219,38 +726,38 @@ def cmd_counts(args):
 def cmd_rankings_player(args):
     """GET /players/{account_id}/rankings - Player hero rankings."""
     if not args:
-        print("Usage: python dota2_query.py rankings <account_id>"); sys.exit(1)
+        print(t("usage_rankings")); sys.exit(1)
     account_id = args[0]
     hero_map = get_hero_map()
     data = api_get(f"/players/{account_id}/rankings")
     if not data:
-        print("No rankings data found"); return
+        print(t("no_rankings_data")); return
     data.sort(key=lambda x: x.get("percent_rank", 0), reverse=True)
-    print(f"\n  Hero Rankings (account: {account_id}):\n")
-    print(f"  {'Hero':<20} {'Percentile':<15} {'Card'}")
+    print(f"\n  {t('rankings_header', aid=account_id)}\n")
+    print(f"  {t('heroes_col_hero'):<20} {t('col_percentile'):<15} {t('col_card')}")
     print("  " + "-" * 50)
     for item in data[:30]:
         hero = hero_map.get(item.get("hero_id", 0), "?")
         pct = f"{item.get('percent_rank', 0)*100:.1f}%"
-        card = item.get("card", "N/A")
+        card = item.get("card", t("n_a"))
         print(f"  {hero:<20} {pct:<15} {card}")
 
 
 def cmd_ratings(args):
     """GET /players/{account_id}/ratings - Rank tier history."""
     if not args:
-        print("Usage: python dota2_query.py ratings <account_id>"); sys.exit(1)
+        print(t("usage_ratings")); sys.exit(1)
     account_id = args[0]
     data = api_get(f"/players/{account_id}/ratings")
     if not data:
-        print("No ratings history found"); return
-    print(f"\n  Rank History (account: {account_id}):\n")
-    print(f"  {'Date':<20} {'Rank Tier':<15} {'Match ID'}")
+        print(t("no_ratings")); return
+    print(f"\n  {t('ratings_header', aid=account_id)}\n")
+    print(f"  {t('col_date'):<20} {t('col_rank_tier'):<15} {t('matches_col_id')}")
     print("  " + "-" * 55)
     for item in data[-20:]:
         date = format_time(item.get("time"))
         rank = decode_rank_tier(item.get("rank_tier"))
-        mid = item.get("match_id", "N/A")
+        mid = item.get("match_id", t("n_a"))
         print(f"  {date:<20} {rank:<15} {mid}")
 
 
@@ -1258,13 +765,13 @@ def cmd_pro_players(args):
     """GET /proPlayers - List of pro players."""
     data = api_get("/proPlayers")
     if not data:
-        print("No pro players found"); return
+        print(t("no_pro_players")); return
     limit = 30
     p = parse_filters(args)
     if "limit" in p:
         limit = int(p["limit"])
-    print(f"\n  Pro Players (showing {min(limit, len(data))} of {len(data)}):\n")
-    print(f"  {'Name':<20} {'Team':<18} {'Country':<8} {'Account ID'}")
+    print(f"\n  {t('pro_players_header', n=min(limit, len(data)), total=len(data))}\n")
+    print(f"  {t('col_name'):<20} {t('col_team'):<18} {t('col_country'):<8} {t('search_col_id')}")
     print("  " + "-" * 60)
     for player in data[:limit]:
         name = player.get("name") or player.get("personaname") or "?"
@@ -1277,12 +784,12 @@ def cmd_pro_players(args):
 def cmd_pro_matches(args):
     """GET /proMatches - Recent pro matches."""
     params = parse_filters(args)
-    data = api_get("/proMatches")
+    data = api_get("/proMatches", params)
     if not data:
-        print("No pro matches found"); return
+        print(t("no_pro_matches")); return
     limit = int(params.get("limit", 20))
-    print(f"\n  Recent Pro Matches:\n")
-    print(f"  {'Match ID':<14} {'Radiant':<18} {'Dire':<18} {'Score':<10} {'Duration':<10} {'League'}")
+    print(f"\n  {t('pro_matches_header')}:\n")
+    print(f"  {t('matches_col_id'):<14} {t('match_team_radiant'):<18} {t('match_team_dire'):<18} {t('col_score'):<10} {t('col_duration'):<10} {t('col_league')}")
     print("  " + "-" * 90)
     for m in data[:limit]:
         mid = m.get("match_id", "?")
@@ -1299,10 +806,10 @@ def cmd_public_matches(args):
     params = parse_filters(args)
     data = api_get("/publicMatches", params)
     if not data:
-        print("No public matches found"); return
+        print(t("no_public_matches")); return
     hero_map = get_hero_map()
-    print(f"\n  Recent Public Matches (showing {len(data)}):\n")
-    print(f"  {'Match ID':<14} {'Avg Rank':<10} {'Duration':<10} {'Radiant Heroes'}")
+    print(f"\n  {t('public_matches_header', n=len(data))}\n")
+    print(f"  {t('matches_col_id'):<14} {t('col_avg_rank'):<10} {t('col_duration'):<10} {t('col_radiant_heroes')}")
     print("  " + "-" * 80)
     for m in data[:20]:
         mid = m.get("match_id", "?")
@@ -1316,9 +823,9 @@ def cmd_live(args):
     """GET /live - Currently ongoing live games."""
     data = api_get("/live")
     if not data:
-        print("No live games found"); return
+        print(t("no_live")); return
     hero_map = get_hero_map()
-    print(f"\n  Live Games ({len(data)} games):\n")
+    print(f"\n  {t('live_header', n=len(data))}\n")
     for i, game in enumerate(data[:15]):
         players = game.get("players", [])
         avg_mmr = game.get("average_mmr", "?")
@@ -1326,9 +833,9 @@ def cmd_live(args):
         gtime = max(0, game.get("game_time", 0))
         r_score = game.get("radiant_score", 0)
         d_score = game.get("dire_score", 0)
-        r_team = game.get("team_name_radiant") or "Radiant"
-        d_team = game.get("team_name_dire") or "Dire"
-        print(f"  Game {i+1}: MMR ~{avg_mmr} | {format_duration(gtime)} | {r_score}-{d_score} | {spectators} spectators")
+        r_team = game.get("team_name_radiant") or t("match_team_radiant")
+        d_team = game.get("team_name_dire") or t("match_team_dire")
+        print(f"  {t('live_game_line', n=i+1, mmr=avg_mmr, time=format_duration(gtime), r_score=r_score, d_score=d_score, spec=spectators)}")
         radiant = [p for p in players if p.get("team", 0) == 0]
         dire = [p for p in players if p.get("team", 0) == 1]
         r_heroes = ", ".join(hero_map.get(p.get("hero_id", 0), "?") for p in radiant[:5])
@@ -1341,12 +848,12 @@ def cmd_live(args):
 def cmd_teams(args):
     """GET /teams - Team list."""
     params = parse_filters(args)
-    data = api_get("/teams")
+    data = api_get("/teams", params)
     if not data:
-        print("No teams found"); return
+        print(t("no_teams")); return
     limit = int(params.get("limit", 25))
-    print(f"\n  Teams (Top {limit}):\n")
-    print(f"  {'ID':<10} {'Name':<22} {'Tag':<8} {'Rating':<10} {'W':<6} {'L':<6} {'Last Match'}")
+    print(f"\n  {t('teams_header', n=limit)}\n")
+    print(f"  {'ID':<10} {t('col_name'):<22} {t('col_tag'):<8} {t('col_rating'):<10} {t('win'):<6} {t('lose'):<6} {t('col_last_match')}")
     print("  " + "-" * 75)
     for team in data[:limit]:
         tid = team.get("team_id", "?")
@@ -1362,31 +869,32 @@ def cmd_teams(args):
 def cmd_team(args):
     """GET /teams/{team_id} + /teams/{team_id}/matches + /teams/{team_id}/players."""
     if not args:
-        print("Usage: python dota2_query.py team <team_id>"); sys.exit(1)
+        print(t("usage_team")); sys.exit(1)
     team_id = args[0]
     info = api_get(f"/teams/{team_id}")
     if not info:
-        print("Team not found"); return
-    print(f"\n  Team: {info.get('name', '?')} [{info.get('tag', '?')}]")
-    print(f"  Rating: {info.get('rating', 0):.0f} | W: {info.get('wins', 0)} | L: {info.get('losses', 0)}")
+        print(t("no_team")); return
+    print(f"\n  {t('team_info', name=info.get('name', '?'), tag=info.get('tag', '?'))}")
+    print(f"  {t('team_rating_wl', rating=info.get('rating', 0), wins=info.get('wins', 0), losses=info.get('losses', 0))}")
     # Players
     players = api_get(f"/teams/{team_id}/players")
     if players:
         current = [p for p in players if p.get("is_current_team_member")]
         if current:
-            print(f"\n  Current Roster:")
+            print(f"\n  {t('team_roster')}:")
             for p in current:
                 name = p.get("name") or "?"
                 games = p.get("games_played", 0)
                 wins = p.get("wins", 0)
-                print(f"    {name}: {games} games, {wins} wins")
+                print(f"    {t('team_player_stats', name=name, games=games, wins=wins)}")
     # Recent matches
     matches = api_get(f"/teams/{team_id}/matches")
     if matches:
-        print(f"\n  Recent Matches:")
-        print(f"  {'Match ID':<14} {'Opponent':<20} {'Result':<8} {'Score':<10} {'Duration'}")
+        print(f"\n  {t('team_recent_matches')}:")
+        print(f"  {t('matches_col_id'):<14} {t('col_opponent'):<20} {t('col_result'):<8} {t('col_score'):<10} {t('col_duration')}")
         print("  " + "-" * 65)
-        for m in (matches if isinstance(matches, list) else [matches])[:10]:
+        match_list = matches if isinstance(matches, list) else []
+        for m in match_list[:10]:
             mid = m.get("match_id", "?")
             opp = (m.get("opposing_team_name") or "?")[:18]
             is_rad = m.get("radiant")
@@ -1400,14 +908,16 @@ def cmd_team(args):
 
 def cmd_leagues(args):
     """GET /leagues - League list."""
+    params = parse_filters(args)
+    limit = int(params.get("limit", 30))
     data = api_get("/leagues")
     if not data:
-        print("No leagues found"); return
+        print(t("no_leagues")); return
     data.sort(key=lambda x: x.get("leagueid", 0), reverse=True)
-    print(f"\n  Leagues (showing 30 of {len(data)}):\n")
-    print(f"  {'ID':<10} {'Name':<40} {'Tier'}")
+    print(f"\n  {t('leagues_header', n=min(limit, len(data)), total=len(data))}\n")
+    print(f"  {'ID':<10} {t('col_name'):<40} {t('col_tier')}")
     print("  " + "-" * 60)
-    for lg in data[:30]:
+    for lg in data[:limit]:
         lid = lg.get("leagueid", "?")
         name = (lg.get("name") or "?")[:38]
         tier = lg.get("tier") or "?"
@@ -1417,38 +927,38 @@ def cmd_leagues(args):
 def cmd_hero_matchups(args):
     """GET /heroes/{hero_id}/matchups - Win rates against other heroes."""
     if not args:
-        print("Usage: python dota2_query.py hero_matchups <hero_id>"); sys.exit(1)
+        print(t("usage_hero_matchups")); sys.exit(1)
     hero_id = args[0]
     hero_map = get_hero_map()
     data = api_get(f"/heroes/{hero_id}/matchups")
     if not data:
-        print("No matchup data found"); return
+        print(t("no_hero_matchups")); return
     hero_name = hero_map.get(int(hero_id), f"Hero {hero_id}")
     data.sort(key=lambda x: x.get("games_played", 0), reverse=True)
-    print(f"\n  Matchups for {hero_name}:\n")
-    print(f"  {'Opponent':<20} {'Games':<10} {'Wins':<10} {'Win Rate'}")
+    print(f"\n  {t('hero_matchups_header', hero=hero_name)}\n")
+    print(f"  {t('col_opponent'):<20} {t('col_games'):<10} {t('heroes_col_wins'):<10} {t('heroes_col_winrate')}")
     print("  " + "-" * 55)
     for m in data[:30]:
         opp = hero_map.get(m.get("hero_id", 0), "?")
         games = m.get("games_played", 0)
         wins = m.get("wins", 0)
-        wr = f"{wins/games*100:.1f}%" if games > 0 else "N/A"
+        wr = f"{wins/games*100:.1f}%" if games > 0 else t("n_a")
         print(f"  {opp:<20} {games:<10} {wins:<10} {wr}")
 
 
 def cmd_hero_rankings(args):
     """GET /rankings?hero_id={} - Top players for a hero."""
     if not args:
-        print("Usage: python dota2_query.py hero_rankings <hero_id>"); sys.exit(1)
+        print(t("usage_hero_rankings")); sys.exit(1)
     hero_id = args[0]
     hero_map = get_hero_map()
     data = api_get("/rankings", {"hero_id": hero_id})
     if not data:
-        print("No rankings found"); return
+        print(t("no_hero_rankings")); return
     hero_name = hero_map.get(int(hero_id), f"Hero {hero_id}")
     rankings = data.get("rankings", [])
-    print(f"\n  Top Players for {hero_name} (showing {min(20, len(rankings))}):\n")
-    print(f"  {'#':<5} {'Player':<25} {'Score':<12} {'Rank'}")
+    print(f"\n  {t('hero_rankings_header', hero=hero_name, n=min(20, len(rankings)))}\n")
+    print(f"  {'#':<5} {t('col_player'):<25} {'Score':<12} {t('col_rank_tier')}")
     print("  " + "-" * 50)
     for i, r in enumerate(rankings[:20], 1):
         name = r.get("personaname") or "?"
@@ -1460,14 +970,14 @@ def cmd_hero_rankings(args):
 def cmd_benchmarks(args):
     """GET /benchmarks?hero_id={} - Hero benchmarks."""
     if not args:
-        print("Usage: python dota2_query.py benchmarks <hero_id>"); sys.exit(1)
+        print(t("usage_benchmarks")); sys.exit(1)
     hero_id = args[0]
     hero_map = get_hero_map()
     data = api_get("/benchmarks", {"hero_id": hero_id})
     if not data:
-        print("No benchmark data found"); return
+        print(t("no_benchmarks")); return
     hero_name = hero_map.get(int(hero_id), f"Hero {hero_id}")
-    print(f"\n  Benchmarks for {hero_name}:\n")
+    print(f"\n  {t('benchmarks_header', hero=hero_name)}\n")
     result = data.get("result", {})
     for stat_name, values in result.items():
         print(f"  [{stat_name}]")
@@ -1482,17 +992,18 @@ def cmd_benchmarks(args):
 def cmd_constants(args):
     """GET /constants/{resource} - Game constants."""
     if not args:
-        print("Usage: python dota2_query.py constants <resource>")
-        print("Resources: heroes, items, abilities, game_mode, lobby_type, region, patch, etc.")
-        print("Full list: https://github.com/odota/dotaconstants/tree/master/build")
+        print(t("usage_constants"))
+        print(t("constants_usage_extra"))
+        print(t("constants_usage_link"))
         sys.exit(1)
     resource = args[0]
     data = api_get(f"/constants/{resource}")
     if not data:
-        print(f"No data for resource '{resource}'"); return
-    print(json.dumps(data, indent=2, ensure_ascii=False)[:5000])
-    if len(json.dumps(data)) > 5000:
-        print(f"\n  ... (output truncated, total {len(json.dumps(data))} chars)")
+        print(t("no_constants", resource=resource)); return
+    raw = json.dumps(data, indent=2, ensure_ascii=False)
+    print(raw[:5000])
+    if len(raw) > 5000:
+        print(f"\n  ... {t('constants_truncated', n=len(raw))}")
 
 
 def cmd_find_matches(args):
@@ -1504,18 +1015,18 @@ def cmd_find_matches(args):
     if "teamB" in params:
         qp["teamB"] = params["teamB"]
     if not qp:
-        print("Usage: python dota2_query.py find_matches --teamA 1,2,3 --teamB 4,5,6")
+        print(t("usage_find_matches"))
         print("  Hero IDs separated by commas. Example: --teamA 11,74 --teamB 1,44")
         sys.exit(1)
     try:
         data = api_get("/findMatches", qp)
     except SystemExit:
-        print("  Note: findMatches API may be temporarily unavailable or the hero combo has no data.")
+        print(f"  {t('find_matches_note')}")
         return
     if not data:
-        print("No matches found for this hero combination"); return
-    print(f"\n  Found {len(data)} matches:\n")
-    print(f"  {'Match ID':<14} {'Duration':<10} {'Date'}")
+        print(t("no_find_matches")); return
+    print(f"\n  {t('find_matches_header', n=len(data))}\n")
+    print(f"  {t('matches_col_id'):<14} {t('col_duration'):<10} {t('col_date')}")
     print("  " + "-" * 45)
     for m in data[:15]:
         mid = m.get("match_id", "?")
@@ -1536,21 +1047,29 @@ def main():
         sys.exit(1)
 
     # Extract --lang from anywhere in args
-    args = sys.argv[1:]
+    raw_args = sys.argv[1:]
     filtered_args = []
-    for a in args:
-        if a == "--lang" or a == "-l":
+    i = 0
+    while i < len(raw_args):
+        a = raw_args[i]
+        if a in ("--lang", "-l"):
+            i += 1
+            if i < len(raw_args):
+                LANG = raw_args[i] if raw_args[i] in ("zh", "en") else "zh"
+            i += 1
             continue
-        if args and len(filtered_args) < len(args):
-            idx = args.index(a)
-            if idx > 0 and args[idx - 1] in ("--lang", "-l"):
-                LANG = a if a in ("zh", "en") else "zh"
-                continue
         if a.startswith("--lang="):
             val = a.split("=", 1)[1]
             LANG = val if val in ("zh", "en") else "zh"
+            i += 1
+            continue
+        if a.startswith("-l="):
+            val = a.split("=", 1)[1]
+            LANG = val if val in ("zh", "en") else "zh"
+            i += 1
             continue
         filtered_args.append(a)
+        i += 1
 
     if not filtered_args:
         print(__doc__)

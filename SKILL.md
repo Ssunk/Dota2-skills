@@ -10,7 +10,7 @@ description: Query Dota 2 player records, match data, hero statistics, pro scene
 ## Tool Script
 
 ```
-~/.claude/skills/dota2-stats/dota2_query.py
+~/.claude/skills/dota2-stats/scripts/dota2_query.py
 ```
 
 **仅使用 Python 标准库**，无需第三方依赖。已配置完整 HTTP Headers 避免 403。
@@ -19,45 +19,45 @@ description: Query Dota 2 player records, match data, hero statistics, pro scene
 
 ### Player Commands
 ```bash
-python dota2_query.py search <name>              # 搜索玩家
-python dota2_query.py player <account_id>         # 玩家信息/段位/胜率
-python dota2_query.py wl <id> [--days/--hero_id/--lobby_type]  # 胜负统计
-python dota2_query.py recent <id>                 # 最近~20场比赛
-python dota2_query.py matches <id> [--limit/--hero_id/--days]  # 完整比赛历史
-python dota2_query.py heroes <id> [--limit N]     # 英雄使用统计
-python dota2_query.py peers <id> [--limit N]      # 一起玩的人
-python dota2_query.py totals <id> [filters]       # 生涯总计(击杀/助攻等)
-python dota2_query.py counts <id>                 # 分类统计
-python dota2_query.py rankings <id>               # 玩家英雄排名
-python dota2_query.py ratings <id>                # 段位历史
-python dota2_query.py refresh <id>                # 刷新玩家数据
+python scripts/dota2_query.py search <name>              # 搜索玩家
+python scripts/dota2_query.py player <account_id>         # 玩家信息/段位/胜率
+python scripts/dota2_query.py wl <id> [--days/--hero_id/--lobby_type]  # 胜负统计
+python scripts/dota2_query.py recent <id>                 # 最近~20场比赛
+python scripts/dota2_query.py matches <id> [--limit/--hero_id/--days]  # 完整比赛历史
+python scripts/dota2_query.py heroes <id> [--limit N]     # 英雄使用统计
+python scripts/dota2_query.py peers <id> [--limit N]      # 一起玩的人
+python scripts/dota2_query.py totals <id> [filters]       # 生涯总计(击杀/助攻等)
+python scripts/dota2_query.py counts <id>                 # 分类统计
+python scripts/dota2_query.py rankings <id>               # 玩家英雄排名
+python scripts/dota2_query.py ratings <id>                # 段位历史
+python scripts/dota2_query.py refresh <id>                # 刷新玩家数据
 ```
 
 ### Match Commands
 ```bash
-python dota2_query.py match <match_id>            # 单场比赛详情(10人数据)
+python scripts/dota2_query.py match <match_id>            # 单场比赛详情(10人数据)
 ```
 
 ### Hero Commands
 ```bash
-python dota2_query.py hero_list                   # 所有英雄列表
-python dota2_query.py hero_stats                  # 英雄全局统计
-python dota2_query.py hero_matchups <hero_id>     # 英雄对抗胜率
-python dota2_query.py hero_rankings <hero_id>     # 英雄排行榜(Top玩家)
-python dota2_query.py benchmarks <hero_id>        # 英雄表现基准
+python scripts/dota2_query.py hero_list                   # 所有英雄列表
+python scripts/dota2_query.py hero_stats                  # 英雄全局统计
+python scripts/dota2_query.py hero_matchups <hero_id>     # 英雄对抗胜率
+python scripts/dota2_query.py hero_rankings <hero_id>     # 英雄排行榜(Top玩家)
+python scripts/dota2_query.py benchmarks <hero_id>        # 英雄表现基准
 ```
 
 ### Global / Pro Commands
 ```bash
-python dota2_query.py pro_players                 # 职业选手列表
-python dota2_query.py pro_matches [--limit N]     # 职业比赛
-python dota2_query.py public_matches [--min_rank] # 公开比赛
-python dota2_query.py live                        # 实时比赛
-python dota2_query.py teams [--limit N]           # 战队列表
-python dota2_query.py team <team_id>              # 战队详情+阵容+比赛
-python dota2_query.py leagues                     # 联赛列表
-python dota2_query.py constants <resource>        # 游戏常量(heroes/items等)
-python dota2_query.py find_matches --teamA 1,2 --teamB 3,4  # 按英雄组合搜索
+python scripts/dota2_query.py pro_players                 # 职业选手列表
+python scripts/dota2_query.py pro_matches [--limit N]     # 职业比赛
+python scripts/dota2_query.py public_matches [--min_rank] # 公开比赛
+python scripts/dota2_query.py live                        # 实时比赛
+python scripts/dota2_query.py teams [--limit N]           # 战队列表
+python scripts/dota2_query.py team <team_id>              # 战队详情+阵容+比赛
+python scripts/dota2_query.py leagues                     # 联赛列表
+python scripts/dota2_query.py constants <resource>        # 游戏常量(heroes/items等)
+python scripts/dota2_query.py find_matches --teamA 1,2 --teamB 3,4  # 按英雄组合搜索
 ```
 
 ### Common Filters
