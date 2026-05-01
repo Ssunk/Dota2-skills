@@ -13,7 +13,7 @@ This skill queries Dota 2 data via the [OpenDota API](https://docs.opendota.com/
 
 - **Default**: Chinese (中文)
 - **English**: add `--lang en` to any command
-- **中文**: 默认输出中文，无需额外参数
+- **中文**: 默认输出中文，无需额外参数，输出的段位还有英雄名也必须是中文
 
 Example:
 ```bash
@@ -146,6 +146,13 @@ python ~/.claude/skills/dota2-stats/dota2_query.py refresh <account_id>
 |----|---------|------|
 | 0 | Normal | 普通 |
 | 7 | Ranked | 排位 |
+
+## Hero Names / 英雄名称
+
+- The script embeds a complete Chinese hero name mapping (127 heroes).
+- Default mode uses built-in Chinese hero names; `--lang en` uses API English names.
+- 脚本内置了完整的 Dota 2 英雄中英文名称对照表（127 个英雄）。
+- 默认中文输出使用内置中文名，英文模式使用 API 英文名。
 
 ## Notes / 注意事项
 

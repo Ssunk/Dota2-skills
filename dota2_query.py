@@ -123,7 +123,7 @@ T = {
         # Hero list
         "herolist_header": "Dota 2 英雄列表（共 {count} 个）:",
         "herolist_col_id": "ID",
-        "herolist_col_name": "英文名",
+        "herolist_col_name": "英雄名",
         "herolist_col_attr": "主属性",
         "herolist_col_atk": "攻击类型",
         "herolist_col_roles": "定位",
@@ -402,6 +402,137 @@ T = {
     }
 }
 
+# Hero ID → Chinese name mapping
+HERO_ZH_NAMES = {
+    1: "敌法师",
+    2: "斧王",
+    3: "祸乱之源",
+    4: "血魔",
+    5: "水晶室女",
+    6: "卓尔游侠",
+    7: "撼地者",
+    8: "主宰",
+    9: "米拉娜",
+    10: "变体精灵",
+    11: "影魔",
+    12: "幻影长矛手",
+    13: "帕克",
+    14: "屠夫",
+    15: "剃刀",
+    16: "沙王",
+    17: "风暴之灵",
+    18: "斯温",
+    19: "小小",
+    20: "复仇之魂",
+    21: "风行者",
+    22: "宙斯",
+    23: "昆卡",
+    25: "莉娜",
+    26: "莱恩",
+    27: "暗影萨满",
+    28: "斯拉达",
+    29: "潮汐猎人",
+    30: "巫医",
+    31: "巫妖",
+    32: "力丸",
+    33: "谜团",
+    34: "修补匠",
+    35: "狙击手",
+    36: "瘟疫法师",
+    37: "术士",
+    38: "兽王",
+    39: "痛苦女王",
+    40: "剧毒术士",
+    41: "虚空假面",
+    42: "冥魂大帝",
+    43: "死亡先知",
+    44: "幻影刺客",
+    45: "帕格纳",
+    46: "圣堂刺客",
+    47: "冥界亚龙",
+    48: "露娜",
+    49: "龙骑士",
+    50: "戴泽",
+    51: "发条技师",
+    52: "拉席克",
+    53: "先知",
+    54: "噬魂鬼",
+    55: "黑暗贤者",
+    56: "克林克兹",
+    57: "全能骑士",
+    58: "魅惑魔女",
+    59: "哈斯卡",
+    60: "暗夜魔王",
+    61: "育母蜘蛛",
+    62: "赏金猎人",
+    63: "编织者",
+    64: "杰奇洛",
+    65: "蝙蝠骑士",
+    66: "陈",
+    67: "幽鬼",
+    68: "远古冰魄",
+    69: "末日使者",
+    70: "熊战士",
+    71: "裂魂人",
+    72: "矮人直升机",
+    73: "炼金术士",
+    74: "祈求者",
+    75: "沉默术士",
+    76: "殁境毁灭者",
+    77: "狼人",
+    78: "酒仙",
+    79: "暗影恶魔",
+    80: "德鲁伊",
+    81: "混沌骑士",
+    82: "米波",
+    83: "树精卫士",
+    84: "食人魔魔法师",
+    85: "不朽尸王",
+    86: "拉比克",
+    87: "干扰者",
+    88: "司夜刺客",
+    89: "娜迦海妖",
+    90: "光之守卫",
+    91: "艾欧",
+    92: "维萨吉",
+    93: "斯拉克",
+    94: "美杜莎",
+    95: "巨魔战将",
+    96: "半人马战行者",
+    97: "马格纳斯",
+    98: "伐木机",
+    99: "钢背兽",
+    100: "巨牙海民",
+    101: "天怒法师",
+    102: "亚巴顿",
+    103: "上古巨神",
+    104: "军团指挥官",
+    105: "工程师",
+    106: "灰烬之灵",
+    107: "大地之灵",
+    108: "孽主",
+    109: "恐怖利刃",
+    110: "凤凰",
+    111: "神谕者",
+    112: "寒冬飞龙",
+    113: "天穹守望者",
+    114: "齐天大圣",
+    119: "邪影芳灵",
+    120: "石鳞剑士",
+    121: "天涯墨客",
+    123: "森海飞侠",
+    126: "虚无之灵",
+    128: "电炎绝手",
+    129: "玛尔斯",
+    131: "百戏大王",
+    135: "破晓辰星",
+    136: "玛西",
+    137: "原始兽",
+    138: "琼英碧灵",
+    145: "凯",
+    155: "拉尔戈",
+}
+
 # Global language, set during startup
 LANG = "zh"
 
@@ -491,11 +622,14 @@ def api_post(endpoint):
 
 
 def get_hero_map():
-    """Get hero ID → localized_name mapping (cached)."""
+    """Get hero ID → name mapping (cached). Chinese names from HERO_ZH_NAMES, English from API."""
     global _hero_cache
     if _hero_cache is None:
         heroes = api_get("/heroes")
-        _hero_cache = {h["id"]: h["localized_name"] for h in heroes}
+        if LANG == "zh":
+            _hero_cache = {h["id"]: HERO_ZH_NAMES.get(h["id"], h["localized_name"]) for h in heroes}
+        else:
+            _hero_cache = {h["id"]: h["localized_name"] for h in heroes}
     return _hero_cache
 
 
@@ -674,8 +808,8 @@ def cmd_recent(args):
         return
 
     print(f"\n  {t('recent_header', count=len(matches))}\n")
-    print(f"  {t('recent_col_hero'):<16} {t('recent_col_result'):<6} {'K/D/A':<10} {t('recent_col_gpm'):<6} {t('recent_col_xpm'):<6} {t('recent_col_duration'):<8} {t('recent_col_date')}")
-    print("  " + "-" * 78)
+    print(f"  {t('matches_col_id'):<12} {t('recent_col_hero'):<14} {t('match_mode'):<10} {t('recent_col_result'):<6} {'K/D/A':<10} {t('recent_col_gpm'):<6} {t('recent_col_xpm'):<6} {t('recent_col_duration'):<8} {t('recent_col_date')}")
+    print("  " + "-" * 98)
 
     wins = 0
     for m in matches:
@@ -684,13 +818,15 @@ def cmd_recent(args):
         if won:
             wins += 1
         result = t("result_win") if won else t("result_lose")
+        mid = str(m.get("match_id", ""))
+        mode = get_mode_name(m.get("game_mode", 0))
         kda = f"{m.get('kills', 0)}/{m.get('deaths', 0)}/{m.get('assists', 0)}"
         gpm = str(m.get("gold_per_min", 0))
         xpm = str(m.get("xp_per_min", 0))
         duration = format_duration(m.get("duration", 0))
         date = format_time(m.get("start_time"))
 
-        print(f"  {hero:<16} {result:<6} {kda:<10} {gpm:<6} {xpm:<6} {duration:<8} {date}")
+        print(f"  {mid:<12} {hero:<14} {mode:<10} {result:<6} {kda:<10} {gpm:<6} {xpm:<6} {duration:<8} {date}")
 
     total = len(matches)
     print(f"\n  {t('recent_summary', total=total, wins=wins, losses=total - wins, wr=wins/total*100)}")
@@ -730,8 +866,8 @@ def cmd_matches(args):
         return
 
     print(f"\n  {t('matches_header', count=len(matches))}\n")
-    print(f"  {t('matches_col_id'):<14} {t('recent_col_hero'):<16} {t('recent_col_result'):<6} {'K/D/A':<10} {t('recent_col_duration'):<8} {t('recent_col_date')}")
-    print("  " + "-" * 78)
+    print(f"  {t('matches_col_id'):<12} {t('recent_col_hero'):<14} {t('match_mode'):<10} {t('recent_col_result'):<6} {'K/D/A':<10} {t('recent_col_duration'):<8} {t('recent_col_date')}")
+    print("  " + "-" * 88)
 
     wins = 0
     for m in matches:
@@ -740,11 +876,12 @@ def cmd_matches(args):
         if won:
             wins += 1
         result = t("result_win") if won else t("result_lose")
+        mode = get_mode_name(m.get("game_mode", 0))
         kda = f"{m.get('kills', 0)}/{m.get('deaths', 0)}/{m.get('assists', 0)}"
         duration = format_duration(m.get("duration", 0))
         date = format_time(m.get("start_time"))
 
-        print(f"  {str(m.get('match_id', '')):<14} {hero:<16} {result:<6} {kda:<10} {duration:<8} {date}")
+        print(f"  {str(m.get('match_id', '')):<12} {hero:<14} {mode:<10} {result:<6} {kda:<10} {duration:<8} {date}")
 
     total = len(matches)
     print(f"\n  {t('matches_summary', total=total, wins=wins, losses=total - wins, wr=wins/total*100)}")
@@ -895,7 +1032,11 @@ def cmd_hero_list(args):
         roles = ", ".join(h.get("roles", []))
         attr = get_attr_name(h.get("primary_attr", ""))
         atk = get_atk_name(h.get("attack_type", ""))
-        print(f"  {h['id']:<6} {h['localized_name']:<28} {attr:<8} {atk:<8} {roles}")
+        if LANG == "zh":
+            name = HERO_ZH_NAMES.get(h["id"], h["localized_name"])
+        else:
+            name = h["localized_name"]
+        print(f"  {h['id']:<6} {name:<28} {attr:<8} {atk:<8} {roles}")
 
 
 def cmd_hero_stats(args):
@@ -908,10 +1049,15 @@ def cmd_hero_stats(args):
     print("  " + "-" * 65)
 
     for h in heroes:
+        hid = h.get("id", 0)
         tp = h.get("turbo_picks", 0)
         tw = h.get("turbo_wins", 0)
         wr = f"{tw / tp * 100:.1f}%" if tp > 0 else t("n_a")
-        print(f"  {h.get('id', 0):<5} {h.get('localized_name', t('unknown')):<24} {tp:<12} {tw:<12} {wr}")
+        if LANG == "zh":
+            name = HERO_ZH_NAMES.get(hid, h.get("localized_name", t("unknown")))
+        else:
+            name = h.get("localized_name", t("unknown"))
+        print(f"  {hid:<5} {name:<24} {tp:<12} {tw:<12} {wr}")
 
 
 def cmd_refresh(args):
