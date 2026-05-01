@@ -1292,19 +1292,24 @@ def cmd_live(args):
     data = api_get("/live")
     if not data:
         print("No live games found"); return
+    hero_map = get_hero_map()
     print(f"\n  Live Games ({len(data)} games):\n")
     for i, game in enumerate(data[:15]):
         players = game.get("players", [])
         avg_mmr = game.get("average_mmr", "?")
         spectators = game.get("spectators", 0)
-        gtime = game.get("game_time", 0)
-        print(f"  Game {i+1}: MMR ~{avg_mmr} | {format_duration(gtime)} | {spectators} spectators")
-        radiant = [p for p in players if p.get("team", 0) == 0][:5]
-        dire = [p for p in players if p.get("team", 0) == 1][:5]
-        r_names = ", ".join((p.get("name") or p.get("personaname") or "?")[:12] for p in radiant[:3])
-        d_names = ", ".join((p.get("name") or p.get("personaname") or "?")[:12] for p in dire[:3])
-        print(f"    Radiant: {r_names}...")
-        print(f"    Dire:    {d_names}...")
+        gtime = max(0, game.get("game_time", 0))
+        r_score = game.get("radiant_score", 0)
+        d_score = game.get("dire_score", 0)
+        r_team = game.get("team_name_radiant") or "Radiant"
+        d_team = game.get("team_name_dire") or "Dire"
+        print(f"  Game {i+1}: MMR ~{avg_mmr} | {format_duration(gtime)} | {r_score}-{d_score} | {spectators} spectators")
+        radiant = [p for p in players if p.get("team", 0) == 0]
+        dire = [p for p in players if p.get("team", 0) == 1]
+        r_heroes = ", ".join(hero_map.get(p.get("hero_id", 0), "?") for p in radiant[:5])
+        d_heroes = ", ".join(hero_map.get(p.get("hero_id", 0), "?") for p in dire[:5])
+        print(f"    {r_team}: {r_heroes}")
+        print(f"    {d_team}: {d_heroes}")
         print()
 
 
@@ -1474,16 +1479,24 @@ def cmd_find_matches(args):
     if "teamB" in params:
         qp["teamB"] = params["teamB"]
     if not qp:
-        print("Usage: python dota2_query.py find_matches --teamA 1,2,3 --teamB 4,5,6"); sys.exit(1)
-    data = api_get("/findMatches", qp)
+        print("Usage: python dota2_query.py find_matches --teamA 1,2,3 --teamB 4,5,6")
+        print("  Hero IDs separated by commas. Example: --teamA 11,74 --teamB 1,44")
+        sys.exit(1)
+    try:
+        data = api_get("/findMatches", qp)
+    except SystemExit:
+        print("  Note: findMatches API may be temporarily unavailable or the hero combo has no data.")
+        return
     if not data:
-        print("No matches found"); return
+        print("No matches found for this hero combination"); return
     print(f"\n  Found {len(data)} matches:\n")
+    print(f"  {'Match ID':<14} {'Duration':<10} {'Date'}")
+    print("  " + "-" * 45)
     for m in data[:15]:
         mid = m.get("match_id", "?")
         dur = format_duration(m.get("duration", 0)) if m.get("duration") else "?"
         start = format_time(m.get("start_time")) if m.get("start_time") else "?"
-        print(f"  Match {mid} | {dur} | {start}")
+        print(f"  {mid:<14} {dur:<10} {start}")
 
 
 # ──────────────────────────────────────────────
