@@ -52,7 +52,7 @@ A complete Dota 2 data query skill based on [OpenDota API](https://docs.opendota
 ## 📁 Project Structure
 
 ```
-dota2-stats/
+dota2-stats-skill/
 ├── SKILL.md                  # Claude Code/OpenClaw skill description
 ├── README.md                 # Chinese version
 ├── README_EN.md              # This file (English version)
@@ -67,7 +67,7 @@ dota2-stats/
 
 ### In Claude Code
 
-Place the directory in `~/.claude/skills/dota2-stats/`, then ask questions in natural language:
+Place the directory in `~/.claude/skills/dota2-stats-skill/`, then ask questions in natural language:
 
 ```
 > Check Miracle's Dota 2 stats
@@ -77,7 +77,7 @@ Place the directory in `~/.claude/skills/dota2-stats/`, then ask questions in na
 
 ### In OpenClaw
 
-Place the directory in `~/.openclaw/plugin-skills/dota2-stats/`, then ask questions in natural language:
+Place the directory in `~/.openclaw/plugin-skills/dota2-stats-skill/`, then ask questions in natural language:
 
 ```
 > Check Miracle's Dota 2 stats

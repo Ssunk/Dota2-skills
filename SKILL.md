@@ -1,5 +1,5 @@
 ---
-name: dota2-stats
+name: dota2-stats-skill
 description: Query Dota 2 player records, match data, hero statistics, pro scene, teams, leagues and live games via OpenDota API. Supports 27 commands covering all API endpoints. Use --lang en for English output, default is Chinese. 查询 Dota 2 玩家战绩、比赛数据、英雄统计、职业赛事、战队、联赛和实时比赛。支持27个命令覆盖所有 OpenDota API 端点。
 ---
 
@@ -10,12 +10,12 @@ This skill uses a Python script to query Dota 2 data via the [OpenDota API](http
 ## Tool Script
 ### Claude Code
 ```
-~/.claude/skills/dota2-stats/scripts/dota2_query.py
+~/.claude/skills/dota2-stats-skill/scripts/dota2_query.py
 ```
 
 ### OpenClaw
 ```
-~/.openclaw/plugin-skills/dota2-stats/scripts/dota2_query.py
+~/.openclaw/plugin-skills/dota2-stats-skill/scripts/dota2_query.py
 ```
 
 

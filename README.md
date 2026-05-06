@@ -52,7 +52,7 @@
 ## 📁 项目结构
 
 ```
-dota2-stats/
+dota2-stats-skill/
 ├── SKILL.md                  # Claude Code/OpenClaw 技能描述
 ├── README.md                 # 本文件
 ├── README_EN.md              # 英文版
@@ -67,7 +67,7 @@ dota2-stats/
 
 ### 在 Claude Code 中
 
-将目录放在 `~/.claude/skills/dota2-stats/`，然后直接用自然语言提问：
+将目录放在 `~/.claude/skills/dota2-stats-skill/`，然后直接用自然语言提问：
 
 ```
 > 查一下 Miracle 的 Dota 2 战绩
@@ -77,7 +77,7 @@ dota2-stats/
 
 ### 在OpenClaw中
 
-将目录放在 `~/.openclaw/plugin-skills/dota2-stats/`，然后直接用自然语言提问：
+将目录放在 `~/.openclaw/plugin-skills/dota2-stats-skill/`，然后直接用自然语言提问：
 
 ```
 > 查一下 Miracle 的 Dota 2 战绩
