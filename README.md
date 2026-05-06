@@ -1,6 +1,6 @@
-# 🎮 Dota 2 战绩查询 - Claude Code Skill
+# 🎮 Dota 2 战绩查询 - Agent Skill
 
-基于 [OpenDota API](https://docs.opendota.com/) 的完整 Dota 2 数据查询技能，覆盖全部 API 端点，供 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 使用。
+基于 [OpenDota API](https://docs.opendota.com/) 的完整 Dota 2 数据查询技能，覆盖全部 API 端点，供 [Claude Code](https://docs.anthropic.com/en/docs/claude-code)/[OpenClaw](https://openclaw.ai) 使用。
 
 ## ✨ 功能 (27 个命令)
 
@@ -65,6 +65,16 @@ dota2-stats/
 ### 在 Claude Code 中
 
 将目录放在 `~/.claude/skills/dota2-stats/`，然后直接用自然语言提问：
+
+```
+> 查一下 Miracle 的 Dota 2 战绩
+> 看看影魔对抗谁胜率最低
+> 最近有什么职业比赛
+```
+
+### 在OpenClaw中
+
+将目录放在 `~/.openclaw/plugin-skills/dota2-stats/`，然后直接用自然语言提问：
 
 ```
 > 查一下 Miracle 的 Dota 2 战绩
