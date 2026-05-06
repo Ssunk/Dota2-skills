@@ -1,4 +1,6 @@
-# 🎮 Dota 2 Stats Query - Agent Skill
+<p align="right">English | <b><a href="./README.md">中文</a></b></p>
+
+# Dota 2 Stats Query - Agent Skill
 
 A complete Dota 2 data query skill based on [OpenDota API](https://docs.opendota.com/), covering all API endpoints for use with [Claude Code](https://docs.anthropic.com/en/docs/claude-code)/[OpenClaw](https://openclaw.ai).
 
