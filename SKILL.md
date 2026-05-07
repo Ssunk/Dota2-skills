@@ -1,25 +1,47 @@
 ---
 name: dota2-stats-skill
-description: Query Dota 2 player records, match data, hero statistics, pro scene, teams, leagues and live games via OpenDota API. Supports 27 commands covering all API endpoints. Use --lang en for English output, default is Chinese. 查询 Dota 2 玩家战绩、比赛数据、英雄统计、职业赛事、战队、联赛和实时比赛。支持27个命令覆盖所有 OpenDota API 端点。
+description: Use this for Dota 2 / DOTA2 / OpenDota questions about players, Steam64/account_id, match_id, heroes, hero matchups, pro matches, teams, leagues, live games, ranks and win rates. Runs a Python standard-library CLI with 27 common OpenDota commands. Default output is Chinese; use --lang en for English. 用于刀塔2/Dota2/DOTA2/OpenDota 查询：玩家战绩、玩家ID、Steam ID、比赛ID、比赛详情、英雄数据、英雄克制、英雄胜率、职业赛事、战队、联赛、实时比赛、段位和胜率。
 ---
 
-# Dota 2 Stats Query Skill (Full API Coverage)
+# Dota 2 Stats Query Skill
 
-This skill uses a Python script to query Dota 2 data via the [OpenDota API](https://docs.opendota.com/), covering all API endpoints.
+This skill uses a Python script to query Dota 2 data via the [OpenDota API](https://docs.opendota.com/), focused on common player, match, hero, team, league and pro-scene workflows.
 
-## Tool Script
+## Execution
+
+Use the script from the installed skill directory. Do not assume the current working directory is the skill root unless it has been verified.
+
 ### Claude Code
-```
-~/.claude/skills/dota2-stats-skill/scripts/dota2_query.py
+```bash
+python ~/.claude/skills/dota2-stats-skill/scripts/dota2_query.py <command> [args]
 ```
 
 ### OpenClaw
-```
-~/.openclaw/plugin-skills/dota2-stats-skill/scripts/dota2_query.py
+```bash
+python ~/.openclaw/plugin-skills/dota2-stats-skill/scripts/dota2_query.py <command> [args]
 ```
 
+When already inside this skill directory, the shorter form is also valid:
 
-**Uses only Python standard library** - no third-party dependencies required. Configured with complete HTTP Headers to avoid 403 errors.
+```bash
+python scripts/dota2_query.py <command> [args]
+```
+
+The script uses only the Python standard library, so no pip install is required. It needs network access to `https://api.opendota.com/api` and uses browser-like HTTP headers to reduce 403 risk.
+
+## Command Selection
+
+- Player name / 玩家名: use `search <name>` first, then `player <account_id>` and usually `recent <account_id>`.
+- Steam64 ID / Dota 2 account ID / 玩家ID: pass it directly to player commands. The script auto-converts Steam64 IDs to 32-bit account IDs.
+- Match ID / 比赛ID / 比赛详情: use `match <match_id>`.
+- Recent matches / 最近比赛 / 近期战绩: use `recent <account_id>` for a quick view, or `matches <account_id> --limit N` for a filtered list.
+- Win rate / 胜率 / 排位胜率: use `wl <account_id>` with filters such as `--days N`, `--hero_id N`, or ranked lobby `--lobby_type 7`.
+- Hero usage / 常用英雄 / 英雄池: use `heroes <account_id>`.
+- Hero counters / hero matchup / 英雄克制 / 对抗胜率: use `hero_matchups <hero_id>`.
+- Top players for a hero / 绝活玩家 / 英雄排行榜: use `hero_rankings <hero_id>`.
+- Pro scene / 职业比赛 / 职业选手 / 战队 / 联赛: use `pro_matches`, `pro_players`, `teams`, `team <team_id>`, or `leagues`.
+- Live games / 实时比赛 / 正在进行: use `live`.
+- Game constants / 常量 / 物品 / 模式 / 大厅 / 地区 / 版本: use `constants <resource>`.
 
 ## Commands (27 total)
 
@@ -99,8 +121,8 @@ python scripts/dota2_query.py find_matches --teamA 1,2 --teamB 3,4  # Search by 
 
 ## Notes
 1. Uses only Python standard library - no pip install required
-2. Configured with browser-level HTTP Headers to prevent 403 errors
+2. Requires network access to the OpenDota API
 3. Players need to have "Public Match Data" enabled
 4. Built-in Chinese names for 127 heroes
 5. Select the output language based on the language used in the user's question, use `--lang en` for English, `--lang zh` for Chinese
-6. **`search` command is slow** (1-2 minutes) because it queries the entire OpenDota player database. When invoking this command, always remind the user that it may take a while and to please wait patiently. If the user already knows the player's Dota 2 account ID, suggest using `player <account_id>` directly for faster results
+6. **`search` command can be slow** because the OpenDota search endpoint may take a while. When invoking this command, remind the user that it may take some time. If the user already knows the player's Dota 2 account ID, suggest using `player <account_id>` directly for faster results

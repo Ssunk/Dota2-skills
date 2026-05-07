@@ -2,7 +2,7 @@
 
 # Dota 2 Stats Query - Agent Skill
 
-A complete Dota 2 data query skill based on [OpenDota API](https://docs.opendota.com/), covering all API endpoints for use with [Claude Code](https://docs.anthropic.com/en/docs/claude-code)/[OpenClaw](https://openclaw.ai).
+A Dota 2 / DOTA2 data query skill based on [OpenDota API](https://docs.opendota.com/), focused on common player stats, Steam ID/account ID, match ID, hero data, hero matchups, pro-scene, team, league, live game, rank and win-rate workflows for use with [Claude Code](https://docs.anthropic.com/en/docs/claude-code)/[OpenClaw](https://openclaw.ai).
 
 ## ✨ Features (27 commands)
 
@@ -57,7 +57,7 @@ dota2-stats-skill/
 ├── README.md                 # Chinese version
 ├── README_EN.md              # This file (English version)
 ├── scripts/
-│   └── dota2_query.py        # Python query script (all features)
+│   └── dota2_query.py        # Python query script (27 common commands)
 └── data/
     ├── translations.json     # Chinese-English bilingual translation dictionary (UI text)
     ├── dota_constants.json   # Game static constants mapping (ranks, modes, lobbies, etc.)
@@ -77,6 +77,12 @@ Place the directory in `~/.claude/skills/dota2-stats-skill/`, then ask questions
 > What pro matches are happening recently
 ```
 
+You can also run the script directly:
+
+```bash
+python ~/.claude/skills/dota2-stats-skill/scripts/dota2_query.py <command> [args]
+```
+
 ### In OpenClaw
 
 Place the directory in `~/.openclaw/plugin-skills/dota2-stats-skill/`, then ask questions in natural language:
@@ -87,7 +93,15 @@ Place the directory in `~/.openclaw/plugin-skills/dota2-stats-skill/`, then ask 
 > What pro matches are happening recently
 ```
 
+You can also run the script directly:
+
+```bash
+python ~/.openclaw/plugin-skills/dota2-stats-skill/scripts/dota2_query.py <command> [args]
+```
+
 ### Command Line Standalone
+
+The shorter path below assumes the current directory is this skill root:
 
 ```bash
 python scripts/dota2_query.py search Miracle
@@ -113,7 +127,8 @@ python scripts/dota2_query.py --lang en player 105248644                # Englis
 
 - **API**: OpenDota API v31 (free, no key required)
 - **Dependencies**: Python 3.6+ standard library only
-- **Headers**: Configured with complete browser-level HTTP Headers to prevent 403
+- **Network**: Requires access to `https://api.opendota.com/api`
+- **Headers**: Uses browser-like HTTP headers to reduce 403 risk
 - **Localization**: Built-in 127 hero Chinese names + rank/mode bilingual
 
 ## 📄 License

@@ -2,7 +2,7 @@
 
 # Dota 2 数据查询 - Agent Skill
 
-基于 [OpenDota API](https://docs.opendota.com/) 的完整 Dota 2 数据查询技能，覆盖全部 API 端点，供 [Claude Code](https://docs.anthropic.com/en/docs/claude-code)/[OpenClaw](https://openclaw.ai) 使用。
+基于 [OpenDota API](https://docs.opendota.com/) 的 Dota 2 / 刀塔2 数据查询技能，面向常用的玩家战绩、玩家ID、Steam ID、比赛ID、英雄数据、英雄克制、职业赛事、战队、联赛、实时比赛、段位和胜率查询场景，供 [Claude Code](https://docs.anthropic.com/en/docs/claude-code)/[OpenClaw](https://openclaw.ai) 使用。
 
 ## ✨ 功能 (27 个命令)
 
@@ -57,7 +57,7 @@ dota2-stats-skill/
 ├── README.md                 # 本文件
 ├── README_EN.md              # 英文版
 ├── scripts/
-│   └── dota2_query.py        # Python 查询脚本（全部功能）
+│   └── dota2_query.py        # Python 查询脚本（27 个常用命令）
 └── data/
     ├── translations.json     # 中英双语翻译字典 (仅含界面文本)
     ├── dota_constants.json   # 游戏静态常量映射 (段位、模式、大厅等)
@@ -77,6 +77,12 @@ dota2-stats-skill/
 > 最近有什么职业比赛
 ```
 
+也可以直接运行脚本：
+
+```bash
+python ~/.claude/skills/dota2-stats-skill/scripts/dota2_query.py <command> [args]
+```
+
 ### 在OpenClaw中
 
 将目录放在 `~/.openclaw/plugin-skills/dota2-stats-skill/`，然后直接用自然语言提问：
@@ -87,7 +93,15 @@ dota2-stats-skill/
 > 最近有什么职业比赛
 ```
 
+也可以直接运行脚本：
+
+```bash
+python ~/.openclaw/plugin-skills/dota2-stats-skill/scripts/dota2_query.py <command> [args]
+```
+
 ### 命令行独立使用
+
+以下短路径适用于当前目录已经在本 skill 根目录时：
 
 ```bash
 python scripts/dota2_query.py search Miracle
@@ -113,7 +127,8 @@ python scripts/dota2_query.py --lang en player 105248644                # Englis
 
 - **API**: OpenDota API v31（免费，无需 Key）
 - **依赖**: 仅 Python 3.6+ 标准库
-- **Headers**: 配置完整浏览器级 HTTP Headers 防止 403
+- **网络**: 需要能访问 `https://api.opendota.com/api`
+- **Headers**: 使用浏览器风格 HTTP Headers，降低 403 风险
 - **本地化**: 内置 127 个英雄中文名 + 段位/模式中英双语
 
 ## 📄 License
